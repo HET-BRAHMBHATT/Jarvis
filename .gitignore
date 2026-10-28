@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.py[cod]
+data/notes.json
+data/notes.tmp
+
