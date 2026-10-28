@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1117">
+  <meta name="description" content="A local-first personal assistant with voice, notes, timers, and optional AI chat.">
+  <title>J.A.R.V.I.S. — Personal Field Console</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app-frame">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="J.A.R.V.I.S. home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 42 42" fill="none">
+            <path d="M21 3.5 36.2 12v18L21 38.5 5.8 30V12L21 3.5Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M21 11v20M11 21h20M14 14l14 14m0-14L14 28" stroke="currentColor" stroke-width=".8" opacity=".55"/>
+            <circle cx="21" cy="21" r="5.2" fill="currentColor"/>
+            <circle cx="21" cy="21" r="1.6" fill="#0b1117"/>
+          </svg>
+        </span>
+        <span class="brand-lockup">
+          <strong>J.A.R.V.I.S.</strong>
+          <small>PERSONAL FIELD CONSOLE</small>
+        </span>
+      </a>
+
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link is-active" type="button" data-view="command">
+          <span class="nav-icon">⌘</span><span>Command deck</span><span class="nav-current"></span>
+        </button>
+        <button class="nav-link" type="button" data-view="memory">
+          <span class="nav-icon">◈</span><span>Memory vault</span><span class="nav-count" id="nav-note-count">0</span>
+        </button>
+        <button class="nav-link" type="button" data-view="systems">
+          <span class="nav-icon">⌁</span><span>System pulse</span><span class="nav-current"></span>
+        </button>
+      </nav>
+
+      <div class="nav-label nav-label-spaced">QUICK PROTOCOLS</div>
+      <div class="protocol-list">
+        <button class="protocol-link" type="button" data-command="What time is it?"><span class="protocol-dot dot-cyan"></span>Local time</button>
+        <button class="protocol-link" type="button" data-command="Calculate 18 * 7"><span class="protocol-dot dot-amber"></span>Quick calculation</button>
+        <button class="protocol-link" type="button" data-command="Show my notes"><span class="protocol-dot dot-green"></span>Recall a note</button>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+      <div class="node-card">
+        <div class="node-card-top">
+          <span class="pulse-ring"><i></i></span>
+          <span class="node-card-title">LOCAL NODE</span>
+          <span class="node-live">LIVE</span>
+        </div>
+        <p id="sidebar-mode-copy">Your command core is running on this device.</p>
+        <div class="node-meter"><span></span></div>
+        <div class="node-foot"><span>PRIVACY MODE</span><span>ON DEVICE</span></div>
+      </div>
+      <div class="sidebar-footer">
+        <span class="version-dot"></span>
+        <span>FIELD BUILD <b>01.0</b></span>
+        <span class="sidebar-footer-right">LOCALHOST</span>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div class="breadcrumb"><span>J.A.R.V.I.S.</span><span class="breadcrumb-slash">/</span><span id="breadcrumb-current">Command deck</span></div>
+        <div class="topbar-right">
+          <div class="clock-wrap">
+            <span class="clock-indicator"></span>
+            <span id="top-clock">--:--</span>
+            <span class="clock-zone" id="top-date">LOCAL TIME</span>
+          </div>
+          <span class="topbar-separator"></span>
+          <button class="icon-button" id="open-settings" type="button" aria-label="Open assistant settings" title="Assistant settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Z"/><path d="m19.4 13.5 1.3 1-.9 2.1-1.6-.1a7.7 7.7 0 0 1-1.3 1l-.3 1.6h-2.3l-.5-1.5a7.5 7.5 0 0 1-1.6 0l-.8 1.4-2.1-.9.1-1.6a7.4 7.4 0 0 1-1.1-1.3l-1.6-.2v-2.4l1.5-.5a7.3 7.3 0 0 1 0-1.6l-1.4-.8.9-2.1 1.6.1a7.7 7.7 0 0 1 1.3-1l.3-1.6h2.3l.5 1.5a7.5 7.5 0 0 1 1.6 0l.8-1.4 2.1.9-.1 1.6a7.4 7.4 0 0 1 1.1 1.3l1.6.2v2.4l-1.5.5a7.3 7.3 0 0 1 0 1.6Z"/></svg>
+          </button>
+          <div class="avatar-chip" aria-label="Personal assistant">J<span></span></div>
+        </div>
+      </header>
+
+      <main class="content-area">
+        <section class="view is-visible" id="view-command" aria-labelledby="welcome-title">
+          <div class="welcome-row">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> PERSONAL AI · FIELD NODE 01</div>
+              <h1 id="welcome-title">Good <span id="daypart">day</span>, <em>commander.</em></h1>
+              <p class="welcome-subtitle">Your quiet corner of the universe is ready. What shall we make easier?</p>
+            </div>
+            <div class="system-pill"><span class="pill-pulse"></span><span>CORE STATUS</span><b id="header-status">CONNECTING</b></div>
+          </div>
+
+          <section class="hero-panel">
+            <div class="hero-grid-overlay" aria-hidden="true"></div>
+            <div class="hero-copy">
+              <div class="hero-kicker"><span class="tiny-star">✦</span> A PERSONAL ASSISTANT, BUILT AROUND YOU</div>
+              <h2>Less friction.<br><span>More possibility.</span></h2>
+              <p>Start with a thought, a small task, or a question. J.A.R.V.I.S. keeps your everyday tools close and your notes on this device.</p>
+              <button class="hero-button" type="button" data-command="What can you do?">
+                Explore what I can do <span aria-hidden="true">↗</span>
+              </button>
+              <div class="hero-qualities">
+                <span><i class="quality-check">✓</i> Local commands</span>
+                <span><i class="quality-check">✓</i> Your notes stay here</span>
+              </div>
+            </div>
+            <div class="orb-wrap" aria-hidden="true">
+              <div class="orb-coordinate coord-one">N 37° 14′</div>
+              <div class="orb-coordinate coord-two">LINK // 001</div>
+              <div class="orb-axis axis-x"></div>
+              <div class="orb-axis axis-y"></div>
+              <div class="orb-ring ring-outer"></div>
+              <div class="orb-ring ring-mid"></div>
+              <div class="orb-ring ring-inner"></div>
+              <div class="orb-core"><div class="orb-core-inner"></div></div>
+              <div class="orb-orbit-dot dot-a"></div>
+              <div class="orb-orbit-dot dot-b"></div>
+              <div class="orb-orbit-dot dot-c"></div>
+              <div class="orb-caption"><span class="orb-caption-line"></span> COGNITIVE CORE <b>01</b></div>
+            </div>
+            <div class="hero-bottom">
+              <span><span class="hero-bottom-dot"></span> YOUR PERSONAL NODE</span>
+              <span>BUILT TO BE USEFUL <b>·</b> DESIGNED TO BE CALM</span>
+            </div>
+          </section>
+
+          <div class="stat-strip" aria-label="Assistant capabilities">
+            <div class="stat-item">
+              <span class="stat-icon stat-cyan">◷</span>
+              <div><small>LOCAL TOOLS</small><strong>Ready on device</strong></div>
+              <span class="stat-state">READY</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon stat-amber">✳</span>
+              <div><small>AI BRAIN</small><strong id="ai-stat-title">Local command mode</strong></div>
+              <span class="stat-state" id="ai-stat-state">LOCAL</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-icon stat-mint">◈</span>
+              <div><small>MEMORY VAULT</small><strong><span id="stat-note-count">0</span> notes saved</strong></div>
+              <span class="stat-state">PRIVATE</span>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="chat-panel surface-panel" aria-labelledby="chat-title">
+              <div class="panel-heading">
+                <div class="panel-heading-main">
+                  <div class="panel-icon chat-panel-icon">✳</div>
+                  <div><h2 id="chat-title">Command channel</h2><p>Ask naturally. I’ll take it from here.</p></div>
+                </div>
+                <div class="chat-heading-actions">
+                  <span class="local-chip" id="chat-mode-chip"><i></i> LOCAL</span>
+                  <button class="quiet-button tts-toggle" id="tts-toggle" type="button" aria-pressed="false" title="Voice replies are off">◗</button>
+                  <button class="quiet-button stop-speech" id="stop-speech" type="button" aria-label="Stop voice reply" title="Stop speaking" disabled>■</button>
+                  <button class="quiet-button" id="clear-chat" type="button" title="Clear saved conversation">↺</button>
+                </div>
+              </div>
+              <div class="chat-scroll" id="chat-scroll">
+                <div class="messages" id="messages" aria-live="polite" aria-relevant="additions"></div>
+                <div class="typing-row" id="typing-row" hidden><span></span><span></span><span></span><small>J.A.R.V.I.S. is thinking</small></div>
+              </div>
+              <div class="prompt-row" aria-label="Suggested prompts">
+                <button type="button" class="prompt-chip" data-prompt="What time is it?">What time is it?</button>
+                <button type="button" class="prompt-chip" data-prompt="Remember that I like quiet mornings">Save a note</button>
+                <button type="button" class="prompt-chip" data-prompt="Set a timer for 5 minutes">Set a timer</button>
+              </div>
+              <form class="composer" id="chat-form">
+                <button class="voice-button" id="voice-button" type="button" aria-label="Start voice input" title="Start voice input">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8"/></svg>
+                </button>
+                <label class="sr-only" for="message-input">Message J.A.R.V.I.S.</label>
+                <input id="message-input" autocomplete="off" maxlength="1800" placeholder="Ask me anything, or try “remember that…”">
+                <button class="send-button" type="submit" aria-label="Send message">
+                  <span>Send</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13m-5-5 5 5-5 5"/></svg>
+                </button>
+              </form>
+              <div class="composer-foot"><span id="voice-note">Tap the mic once to listen continuously; tap again to stop. Voice may be processed online.</span><span>ENTER TO SEND <b>↵</b></span></div>
+            </section>
+
+            <aside class="right-rail">
+              <section class="rail-card status-card">
+                <div class="rail-heading"><span class="rail-heading-icon">⌁</span><h2>At a glance</h2><span class="rail-live"><i></i> LIVE</span></div>
+                <div class="glance-clock" id="rail-clock">--:--</div>
+                <div class="glance-date" id="rail-date">LOCAL DATE</div>
+                <div class="glance-divider"></div>
+                <div class="health-row"><span class="health-label"><i class="health-dot dot-green"></i> Assistant</span><b id="rail-core-state">Starting</b></div>
+                <div class="health-row"><span class="health-label"><i class="health-dot dot-cyan"></i> AI mode</span><b id="rail-ai-state">Local</b></div>
+              </section>
+
+              <section class="rail-card tools-card">
+                <div class="rail-heading"><span class="rail-heading-icon amber-icon">✦</span><h2>Quick actions</h2><button class="mini-arrow" type="button" data-view="systems" aria-label="See all tools">↗</button></div>
+                <button class="action-row" type="button" data-command="What time is it?"><span class="action-icon action-clock">◷</span><span><b>Check the time</b><small>On this device</small></span><i>↗</i></button>
+                <button class="action-row" type="button" data-command="Calculate 84 / 7"><span class="action-icon action-calc">÷</span><span><b>Quick calculation</b><small>Safe local calculator</small></span><i>↗</i></button>
+                <button class="action-row" type="button" data-command="Set a timer for 5 minutes"><span class="action-icon action-timer">◴</span><span><b>Start a timer</b><small id="timer-rail-copy">Your tab stays open</small></span><i>↗</i></button>
+              </section>
+
+              <section class="rail-card memory-preview">
+                <div class="rail-heading"><span class="rail-heading-icon mint-icon">◈</span><h2>Memory vault</h2><button class="mini-arrow" type="button" data-view="memory" aria-label="Open Memory Vault">↗</button></div>
+                <div id="memory-preview-list" class="memory-preview-list">
+                  <div class="empty-memory"><span>✧</span><p>A little room for things you’d like to remember.</p></div>
+                </div>
+                <button class="text-link" type="button" data-view="memory">Open your memory vault <span>→</span></button>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-memory" aria-labelledby="memory-title" hidden>
+          <div class="page-heading">
+            <div class="eyebrow"><span class="eyebrow-line"></span> YOUR PRIVATE SPACE</div>
+            <h1 id="memory-title">Memory <em>vault.</em></h1>
+            <p>Small things worth keeping, stored in a file on this device.</p>
+          </div>
+          <section class="memory-layout">
+            <div class="memory-compose surface-panel">
+              <div class="panel-heading">
+                <div class="panel-heading-main"><div class="panel-icon memory-panel-icon">◈</div><div><h2>Add a note</h2><p>Only you can decide what belongs here.</p></div></div>
+              </div>
+              <form id="note-form" class="note-form">
+                <label for="note-input">YOUR NOTE</label>
+                <textarea id="note-input" maxlength="600" rows="4" placeholder="A preference, an idea, a reminder…"></textarea>
+                <div class="note-form-foot"><span id="note-char-count">0 / 600</span><button class="primary-button" type="submit">Save to vault <span>↗</span></button></div>
+              </form>
+              <div class="privacy-callout"><span>◇</span><p><b>Stored locally.</b> Notes are saved in <code>data/notes.json</code> inside your J.A.R.V.I.S. folder.</p></div>
+            </div>
+            <div class="memory-list-panel surface-panel">
+              <div class="panel-heading">
+                <div class="panel-heading-main"><div class="panel-icon memory-panel-icon">⌕</div><div><h2>Saved notes</h2><p id="memory-count-label">Your vault is ready.</p></div></div>
+                <span class="vault-count" id="vault-count">00</span>
+              </div>
+              <div class="notes-list" id="notes-list"></div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-systems" aria-labelledby="systems-title" hidden>
+          <div class="page-heading">
+            <div class="eyebrow"><span class="eyebrow-line"></span> BUILT FOR SMALL WINS</div>
+            <h1 id="systems-title">System <em>pulse.</em></h1>
+            <p>A simple toolkit, ready when you are. No smart-home controls are connected.</p>
+          </div>
+          <div class="systems-layout">
+            <section class="surface-panel protocol-panel">
+              <div class="panel-heading">
+                <div class="panel-heading-main"><div class="panel-icon chat-panel-icon">⌘</div><div><h2>Available protocols</h2><p>Each command runs locally unless marked AI chat.</p></div></div>
+              </div>
+              <div class="protocol-grid">
+                <button class="protocol-card" type="button" data-command="What time is it?"><span class="protocol-card-icon">◷</span><small>01 / DEVICE</small><b>Local clock</b><p>Get the current time from your computer.</p><span class="protocol-card-cta">Try it <i>→</i></span></button>
+                <button class="protocol-card" type="button" data-command="What is today's date?"><span class="protocol-card-icon amber-icon">▦</span><small>02 / DEVICE</small><b>Date & day</b><p>Check today’s date using your system clock.</p><span class="protocol-card-cta">Try it <i>→</i></span></button>
+                <button class="protocol-card" type="button" data-command="Calculate 144 / 12"><span class="protocol-card-icon mint-icon">÷</span><small>03 / SAFE TOOL</small><b>Calculator</b><p>Evaluate basic arithmetic without running code.</p><span class="protocol-card-cta">Try it <i>→</i></span></button>
+                <button class="protocol-card" type="button" data-command="Remember that I prefer a calm workspace"><span class="protocol-card-icon">◈</span><small>04 / MEMORY</small><b>Private notes</b><p>Save a note locally and recall it at any time.</p><span class="protocol-card-cta">Try it <i>→</i></span></button>
+                <button class="protocol-card" type="button" data-command="Set a timer for 2 minutes"><span class="protocol-card-icon amber-icon">◴</span><small>05 / DEVICE</small><b>Tab timer</b><p>Set a timer that alerts you while this tab is open.</p><span class="protocol-card-cta">Try it <i>→</i></span></button>
+                <button class="protocol-card" type="button" data-command="Open YouTube"><span class="protocol-card-icon mint-icon">↗</span><small>06 / ALLOWLIST</small><b>Open a trusted site</b><p>Open Google, YouTube, Spotify, GitHub, Wikipedia, or Maps.</p><span class="protocol-card-cta">Try it <i>→</i></span></button>
+              </div>
+            </section>
+            <section class="surface-panel system-health-panel">
+              <div class="panel-heading">
+                <div class="panel-heading-main"><div class="panel-icon system-panel-icon">⌁</div><div><h2>Local node</h2><p>Core services on this computer.</p></div></div>
+              </div>
+              <div class="node-health-row"><span class="health-dot dot-green"></span><span><b>Assistant server</b><small>Loopback only · 127.0.0.1</small></span><strong id="health-server">ONLINE</strong></div>
+              <div class="node-health-row"><span class="health-dot dot-cyan"></span><span><b>Conversation mode</b><small id="health-ai-detail">Built-in local commands</small></span><strong id="health-ai">LOCAL</strong></div>
+              <div class="node-health-row"><span class="health-dot dot-amber"></span><span><b>Voice input</b><small id="health-voice-detail">Checking browser support</small></span><strong id="health-voice">CHECKING</strong></div>
+              <div class="node-health-row"><span class="health-dot dot-mint"></span><span><b>Memory vault</b><small>JSON file stored in this project</small></span><strong>LOCAL</strong></div>
+              <button class="settings-link" id="system-settings" type="button">Configure optional AI chat <span>↗</span></button>
+            </section>
+          </div>
+          <div class="system-note"><span>ⓘ</span><p><b>Voice privacy:</b> the microphone starts only when you press the voice button. Browser speech recognition may process audio through your browser provider. Text chat and notes stay on-device in local mode.</p></div>
+        </section>
+
+        <footer class="page-footer">
+          <span>J.A.R.V.I.S. <b>·</b> A PERSONAL FIELD CONSOLE</span>
+          <span>MADE FOR YOUR OWN LITTLE UNIVERSE <span class="footer-spark">✦</span></span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="settings-dialog" id="settings-dialog" aria-labelledby="settings-title">
+    <div class="dialog-top"><span class="dialog-kicker">CONTROL ROOM / CONFIGURATION</span><button class="icon-button close-dialog" type="button" aria-label="Close settings">×</button></div>
+    <div class="dialog-symbol">✳</div>
+    <h2 id="settings-title">Your assistant,<br><em>your settings.</em></h2>
+    <p class="dialog-intro">J.A.R.V.I.S. works straight away in local mode. Open-ended AI chat needs an OpenAI API key, available credits, and access to the selected model. Creating a key does not add API credits.</p>
+    <div class="setting-status"><span class="status-orb"></span><div><small>CHAT MODE</small><b id="dialog-mode">Checking…</b></div><span class="setting-status-note" id="dialog-model"></span></div>
+    <ol class="setup-steps">
+      <li><span>01</span><p>Copy <code>.env.example</code> to <code>.env</code> in the project folder.</p></li>
+      <li><span>02</span><p>Add your key to <code>OPENAI_API_KEY=...</code>.</p></li>
+      <li><span>03</span><p>Restart the server. Your key stays in that local file.</p></li>
+    </ol>
+    <div class="privacy-callout dialog-privacy"><span>◇</span><p>Your chat log is saved in this browser. In OpenAI mode, your message and recent chat turns are sent to OpenAI for a reply; local commands and notes stay on this device.</p></div>
+    <div class="dialog-footer"><a href="https://developers.openai.com/api/docs/quickstart" target="_blank" rel="noopener noreferrer">Open official API setup guide ↗</a><button class="quiet-button close-dialog" type="button">Done</button></div>
+  </dialog>
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <div class="timer-banner" id="timer-banner" hidden><span class="timer-banner-icon">◴</span><span><small>J.A.R.V.I.S. TIMER</small><b id="timer-banner-value">00:00</b></span><button type="button" id="stop-timer" aria-label="Stop timer">×</button></div>
+</body>
+</html>
+
+
