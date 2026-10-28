@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: jarvis-field-console
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py --no-browser
+    healthCheckPath: /api/health
+    envVars:
+      - key: JARVIS_REQUIRE_AUTH
+        value: "true"
+      - key: JARVIS_NOTES_MODE
+        value: browser
+      - key: JARVIS_ACCESS_PASSWORD
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: JARVIS_MODEL
+        value: gpt-5.4-mini
+
