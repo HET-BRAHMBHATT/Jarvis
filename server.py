@@ -20,7 +20,8 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
+NODE_STARTED_MONOTONIC = time.monotonic()
 DATA_DIR = ROOT / "data"
 NOTES_PATH = DATA_DIR / "notes.json"
 LOCAL_HOST = "127.0.0.1"
@@ -688,6 +689,13 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 "model": os.environ.get("JARVIS_MODEL", "gpt-5.4-mini"),
                 "notes": 0 if browser_notes_enabled() else len(read_notes()),
                 "notesMode": "browser" if browser_notes_enabled() else "server",
+                "node": {
+                    "transport": "hosted" if os.environ.get("PORT") or os.environ.get("RENDER_EXTERNAL_HOSTNAME") else "loopback",
+                    "port": PORT,
+                    "runtime": "Python " + str(sys.version_info.major) + "." + str(sys.version_info.minor),
+                    "uptimeSeconds": max(0, int(time.monotonic() - NODE_STARTED_MONOTONIC)),
+                    "storage": "browser" if browser_notes_enabled() else "local file",
+                },
             })
             return
         if not self.require_access():
@@ -823,9 +831,10 @@ class JarvisHandler(BaseHTTPRequestHandler):
 
 
 def main() -> int:
-    global PORT
+    global PORT, NODE_STARTED_MONOTONIC
     load_dotenv()
     PORT = read_port()
+    NODE_STARTED_MONOTONIC = time.monotonic()
     hosted = bool(os.environ.get("PORT"))
     host = "0.0.0.0" if hosted else LOCAL_HOST
     if os.environ.get("JARVIS_REQUIRE_AUTH", "").strip().casefold() in {"1", "true", "yes", "on"}:
