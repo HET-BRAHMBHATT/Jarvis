@@ -13,7 +13,7 @@ The app uses Python's standard library and browser features. It does not need a 
 ## What works locally
 
 - Chat-style commands for the local time and date.
-- A restricted arithmetic calculator that understands standard symbols, spoken operators, and Indian number scales such as lakh and crore; it does not evaluate arbitrary Python.
+- A restricted arithmetic calculator that understands standard symbols, spoken operators, speech variants of lakh, and Indian number scales such as lakh and crore; ask “read this number” to see the latest result in words. It does not evaluate arbitrary Python.
 - Personal notes that are saved in `data/notes.json` in this project folder.
 - Timers that remain active while the assistant tab is open.
 - Links to an allowlist of sites: Google, YouTube, Spotify, GitHub, Wikipedia, and Google Maps.
