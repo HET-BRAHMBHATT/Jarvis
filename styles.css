@@ -28,4 +28,8 @@
 .mode-option:disabled{opacity:.48;cursor:not-allowed}
 .mode-option:not(:disabled):hover{color:#d5e5e3}
 @media(max-width:680px){.chat-heading-actions{gap:4px}.mode-option{padding:0 5px;font-size:6px}}
+.node-version{display:inline-flex;vertical-align:middle;margin-left:5px;padding:3px 5px;border:1px solid #e5b5792b;border-radius:10px;background:#e5b5790d;color:#e5b579;font:6px var(--mono);letter-spacing:.04em}
+.node-refresh{flex:0 0 auto;margin-left:auto;color:var(--cyan);font-size:14px}
+.node-refresh.is-loading{animation:node-spin .7s linear infinite}
+@keyframes node-spin{to{transform:rotate(360deg)}}
 
