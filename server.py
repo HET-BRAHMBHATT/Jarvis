@@ -20,6 +20,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent
+APP_VERSION = "2.0.0"
 DATA_DIR = ROOT / "data"
 NOTES_PATH = DATA_DIR / "notes.json"
 LOCAL_HOST = "127.0.0.1"
@@ -620,7 +621,7 @@ def origin_is_local(origin: str | None, request_host: str = "", forwarded_proto:
 
 
 class JarvisHandler(BaseHTTPRequestHandler):
-    server_version = "JarvisLocal/1.0"
+    server_version = "JarvisLocal/" + APP_VERSION
 
     def log_message(self, format: str, *args: object) -> None:
         # Keep logs operational and omit request bodies, which may contain private chat text.
@@ -681,6 +682,7 @@ class JarvisHandler(BaseHTTPRequestHandler):
             ai_available = bool(os.environ.get("OPENAI_API_KEY", "").strip())
             self.send_json({
                 "status": "online",
+                "version": APP_VERSION,
                 "mode": "openai" if ai_available else "local",
                 "aiAvailable": ai_available,
                 "model": os.environ.get("JARVIS_MODEL", "gpt-5.4-mini"),
