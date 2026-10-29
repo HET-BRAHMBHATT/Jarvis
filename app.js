@@ -5,6 +5,7 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const CHAT_KEY = "jarvis.field.chat.v1";
   const SPEECH_KEY = "jarvis.field.speech.v1";
+  const MODE_KEY = "jarvis.field.mode.v1";
   const TIMER_KEY = "jarvis.field.timer.v1";
   const NOTES_KEY = "jarvis.field.notes.v1";
   const allowedHosts = new Set(["www.youtube.com", "www.google.com", "open.spotify.com", "github.com", "www.wikipedia.org", "maps.google.com"]);
@@ -22,7 +23,9 @@
     } catch (_) { return false; }
   }
   const history = [];
-  let currentMode = "local";
+  let currentMode = storageGet(MODE_KEY) === "openai" ? "openai" : "local";
+  let openaiAvailable = false;
+  let currentModel = "";
   let notesMode = "server";
   let busy = false;
   let recognition = null;
@@ -148,11 +151,15 @@
   }
 
   function setMode(mode, model, configuredOnly = false) {
-    currentMode = mode === "openai" ? "openai" : "local";
+    currentModel = model || currentModel;
+    currentMode = mode === "openai" && openaiAvailable ? "openai" : "local";
     const cloud = currentMode === "openai";
     const aiState = configuredOnly ? "CONFIGURED" : "AI READY";
     $("#header-status").textContent = cloud ? (configuredOnly ? "AI CONFIGURED" : "AI READY") : "LOCAL READY";
-    $("#chat-mode-chip").lastChild.textContent = cloud ? " OPENAI" : " LOCAL";
+    $("#mode-local").setAttribute("aria-pressed", String(!cloud));
+    $("#mode-openai").setAttribute("aria-pressed", String(cloud));
+    $("#mode-openai").disabled = !openaiAvailable;
+    $("#mode-openai").title = openaiAvailable ? "Use OpenAI for open-ended answers" : "Configure an OpenAI API key to enable AI chat";
     $("#ai-stat-title").textContent = cloud ? (configuredOnly ? "OpenAI key configured" : "OpenAI chat connected") : "Local command mode";
     $("#ai-stat-state").textContent = cloud ? aiState : "LOCAL";
     $("#rail-ai-state").textContent = cloud ? (configuredOnly ? "Configured" : "OpenAI chat") : "Local";
@@ -173,8 +180,15 @@
     try {
       const status = await requestJson("/api/health");
       notesMode = status.notesMode === "browser" ? "browser" : "server";
-      setMode(status.mode, status.model, status.mode === "openai");
-      $("#header-status").textContent = status.status === "online" ? (status.mode === "openai" ? "AI READY" : "CORE READY") : "CHECK STATUS";
+      openaiAvailable = status.aiAvailable === true || status.mode === "openai";
+      currentModel = status.model || "";
+      const savedMode = storageGet(MODE_KEY);
+      const preferredMode = savedMode === "local" || savedMode === "openai" ? savedMode : status.mode;
+      setMode(preferredMode, currentModel, preferredMode === "openai");
+      if (!savedMode) {
+        try { localStorage.setItem(MODE_KEY, currentMode); } catch (_) {}
+      }
+      $("#header-status").textContent = status.status === "online" ? (currentMode === "openai" ? "AI CONFIGURED" : "CORE READY") : "CHECK STATUS";
       $("#rail-core-state").textContent = status.status === "online" ? "Online" : "Unavailable";
       $("#health-server").textContent = status.status === "online" ? "ONLINE" : "OFFLINE";
       await refreshNotes();
@@ -289,13 +303,13 @@
     try {
       const response = await requestJson("/api/chat", {
         method: "POST",
-        body: JSON.stringify({ message: text, history: prior })
+        body: JSON.stringify({ message: text, history: prior, mode: currentMode })
       });
       $("#typing-row").hidden = true;
       const reply = String(response.reply || "I don’t have a reply for that yet.");
       renderMessage("assistant", reply, { action: response.action });
       addToHistory("assistant", reply);
-      if (response.source === "openai") setMode("openai");
+      if (response.source === "openai") setMode("openai", currentModel, false);
       if (response.action) await runAction(response.action);
       if (speechEnabled) speak(reply);
     } catch (error) {
@@ -760,6 +774,17 @@
     });
     $("#stop-timer").addEventListener("click", () => stopTimer(true));
     const dialog = $("#settings-dialog");
+    $("#mode-local").addEventListener("click", () => {
+      currentMode = "local";
+      try { localStorage.setItem(MODE_KEY, currentMode); } catch (_) {}
+      setMode("local", currentModel);
+    });
+    $("#mode-openai").addEventListener("click", () => {
+      if (!openaiAvailable) return;
+      currentMode = "openai";
+      try { localStorage.setItem(MODE_KEY, currentMode); } catch (_) {}
+      setMode("openai", currentModel, true);
+    });
     $("#open-settings").addEventListener("click", () => dialog.showModal());
     $("#system-settings").addEventListener("click", () => dialog.showModal());
     $$(".close-dialog").forEach(button => button.addEventListener("click", () => dialog.close()));
