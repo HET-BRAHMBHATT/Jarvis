@@ -352,7 +352,7 @@ def local_command(message: str) -> dict[str, object] | None:
                 "source": "local",
             }
         return {
-            "reply": "Switched to OpenAI mode. Open-ended prompts will use your configured API key; built-in commands still run locally.",
+            "reply": "Switched to OpenAI mode. Open-ended prompts use your configured API key and require API credits; built-in commands still run locally.",
             "action": {"type": "set_mode", "mode": "openai"},
             "source": "local",
         }
