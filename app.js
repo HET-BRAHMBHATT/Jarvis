@@ -325,7 +325,18 @@
 
   async function runAction(action) {
     if (!action || typeof action.type !== "string") return;
-    if (action.type === "timer") {
+    if (action.type === "delete_previous_turn") {
+      const userIndex = history.length - 4;
+      const assistantIndex = history.length - 3;
+      const messages = $$(".message", $("#messages"));
+      if (userIndex >= 0 && history[userIndex].role === "user" && history[assistantIndex]?.role === "assistant") {
+        messages[assistantIndex]?.remove();
+        messages[userIndex]?.remove();
+        history.splice(userIndex, 2);
+        persistChat();
+        showToast("Removed the previous message and reply from this browser’s chat.");
+      }
+    } else if (action.type === "timer") {
       startTimer(Number(action.seconds), String(action.label || "Timer"));
     } else if (action.type === "timer_error") {
       showToast(String(action.message || "Timer could not be set."), true);
