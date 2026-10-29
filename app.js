@@ -325,7 +325,13 @@
 
   async function runAction(action) {
     if (!action || typeof action.type !== "string") return;
-    if (action.type === "delete_previous_turn") {
+    if (action.type === "set_mode") {
+      currentMode = action.mode === "openai" ? "openai" : "local";
+      if (currentMode === "openai") openaiAvailable = true;
+      try { localStorage.setItem(MODE_KEY, currentMode); } catch (_) {}
+      setMode(currentMode, currentModel, currentMode === "openai");
+      showToast(currentMode === "openai" ? "OpenAI mode is on." : "Local mode is on.");
+    } else if (action.type === "delete_previous_turn") {
       const userIndex = history.length - 4;
       const assistantIndex = history.length - 3;
       const messages = $$(".message", $("#messages"));
