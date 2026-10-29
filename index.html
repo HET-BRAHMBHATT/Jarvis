@@ -154,7 +154,10 @@
                   <div><h2 id="chat-title">Command channel</h2><p>Ask naturally. I’ll take it from here.</p></div>
                 </div>
                 <div class="chat-heading-actions">
-                  <span class="local-chip" id="chat-mode-chip"><i></i> LOCAL</span>
+                  <div class="mode-switch" role="group" aria-label="Conversation mode">
+                    <button class="mode-option" id="mode-local" type="button" aria-pressed="true" title="Keep chat and built-in commands on this device">LOCAL</button>
+                    <button class="mode-option" id="mode-openai" type="button" aria-pressed="false" title="Configure an OpenAI API key to enable AI chat" disabled>OPENAI</button>
+                  </div>
                   <button class="quiet-button tts-toggle" id="tts-toggle" type="button" aria-pressed="false" title="Voice replies are off">◗</button>
                   <button class="quiet-button stop-speech" id="stop-speech" type="button" aria-label="Stop voice reply" title="Stop speaking" disabled>■</button>
                   <button class="quiet-button" id="clear-chat" type="button" title="Clear saved conversation">↺</button>
