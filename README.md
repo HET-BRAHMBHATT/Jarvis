@@ -18,6 +18,7 @@ The app uses Python's standard library and browser features. It does not need a 
 - Timers that remain active while the assistant tab is open.
 - Links to an allowlist of sites: Google, YouTube, Spotify, GitHub, Wikipedia, and Google Maps.
 - Voice replies through the browser’s built-in speech synthesis, with a dedicated stop button.
+- A Local/OpenAI conversation-mode switch in the chat header. Your choice is remembered in this browser; built-in commands and notes stay local in either mode.
 - Voice input in supported browsers. Tap the mic once to start a hands-free session; it stays ready for the next question after each answer. Tap the mic again to stop immediately. Browser speech recognition may process audio through your browser provider. If the browser asks again, set the local page microphone permission to Allow; private or temporary browser sessions may discard site permissions.
 
 The chat transcript and voice-reply preference are saved in this browser’s local storage. In local mode, messages and notes are not sent to an AI service.
@@ -30,7 +31,7 @@ Open-ended AI answers require a configured language model and an API account wit
 2. Put your key after `OPENAI_API_KEY=`.
 3. Save the file and restart `run_jarvis.bat`.
 
-The server reads the key from `.env`; the browser never receives it. When OpenAI mode is configured, open-ended prompts and up to eight recent chat turns are sent to OpenAI. Built-in commands and notes continue to run locally. The interface reports that the key is configured until a live AI request succeeds. A 429 credit or spending-limit error means API billing needs attention; see [OpenAI billing](https://platform.openai.com/settings/organization/billing) and [organization limits](https://platform.openai.com/settings/organization/limits). You can choose a different model with `JARVIS_MODEL=...`. The default is `gpt-5.4-mini`.
+The server reads the key from `.env`; the browser never receives it. When OpenAI mode is selected, open-ended prompts and up to eight recent chat turns are sent to OpenAI. Built-in commands and notes continue to run locally. The interface reports that the key is configured until a live AI request succeeds. A 429 credit or spending-limit error means API billing needs attention; see [OpenAI billing](https://platform.openai.com/settings/organization/billing) and [organization limits](https://platform.openai.com/settings/organization/limits). You can choose a different model with `JARVIS_MODEL=...`. The default is `gpt-5.4-mini`.
 
 J.A.R.V.I.S. uses the OpenAI Responses API for this optional connection. See the [official OpenAI API quickstart](https://developers.openai.com/api/docs/quickstart).
 
