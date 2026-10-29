@@ -327,6 +327,9 @@ def local_command(message: str) -> dict[str, object] | None:
     if re.fullmatch(r"(hi|hello|hey|good morning|good afternoon|good evening|how are you)[.!? ]*", lower):
         return {"reply": "All systems are ready. What would you like to do?", "action": None, "source": "local"}
 
+    if re.search(r"\b(?:i love you|love you|i like you|you(?:'re| are) (?:great|awesome|the best))\b", lower):
+        return {"reply": "That’s kind of you. I’m glad I can help. What shall we work on next?", "action": None, "source": "local"}
+
     if re.search(r"\b(?:invalid syntax|calculator error|calculation error)\b", lower):
         return {
             "reply": "That was a calculator parsing bug: it treated Indian number scales as code. I fixed it to understand lakh, crore, and spoken “into” as multiplication.",
@@ -468,6 +471,33 @@ def read_calculation_follow_up(message: str, history: object) -> dict[str, objec
     return {
         "reply": "I don’t see a recent calculator result in this chat. Ask me to calculate it, then say “read that number.”",
         "action": None,
+        "source": "local",
+    }
+
+
+def delete_previous_chat_turn(message: str, history: object) -> dict[str, object] | None:
+    lower = message.casefold()
+    if not re.search(r"\b(?:delete|remove)\b", lower) or not re.search(r"\bmessage\b", lower):
+        return None
+    if not re.search(r"\b(?:this|that|last|previous|my)\b", lower):
+        return None
+
+    has_previous_turn = False
+    if isinstance(history, list):
+        entries = history[-20:]
+        last_assistant = next((index for index in range(len(entries) - 1, -1, -1)
+                               if isinstance(entries[index], dict) and entries[index].get("role") == "assistant"), -1)
+        if last_assistant >= 0:
+            has_previous_turn = any(
+                isinstance(entries[index], dict) and entries[index].get("role") == "user"
+                for index in range(last_assistant - 1, -1, -1)
+            )
+
+    if not has_previous_turn:
+        return {"reply": "There isn’t an earlier user message to remove yet.", "action": None, "source": "local"}
+    return {
+        "reply": "Removed the previous user message and J.A.R.V.I.S. reply from this chat.",
+        "action": {"type": "delete_previous_turn"},
         "source": "local",
     }
 
@@ -700,6 +730,8 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 return
             message = message.strip()[:1800]
             result = local_command(message)
+            if result is None:
+                result = delete_previous_chat_turn(message, body.get("history"))
             if result is None:
                 result = read_calculation_follow_up(message, body.get("history"))
             if result is not None:
