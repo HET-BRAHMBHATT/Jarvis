@@ -179,6 +179,7 @@
   async function refreshStatus() {
     try {
       const status = await requestJson("/api/health");
+      if (status.version) $("#app-version").textContent = status.version;
       notesMode = status.notesMode === "browser" ? "browser" : "server";
       openaiAvailable = status.aiAvailable === true || status.mode === "openai";
       currentModel = status.model || "";
