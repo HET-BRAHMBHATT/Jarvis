@@ -263,12 +263,14 @@
             </section>
             <section class="surface-panel system-health-panel">
               <div class="panel-heading">
-                <div class="panel-heading-main"><div class="panel-icon system-panel-icon">⌁</div><div><h2>Local node</h2><p>Core services on this computer.</p></div></div>
+                <div class="panel-heading-main"><div class="panel-icon system-panel-icon">⌁</div><div><h2>Local node <span class="node-version" id="node-version">v2.1.0</span></h2><p id="node-summary">Core services on this computer.</p></div></div>
+                <button class="mini-arrow node-refresh" id="refresh-node" type="button" aria-label="Refresh local node diagnostics" title="Refresh local node diagnostics">↻</button>
               </div>
-              <div class="node-health-row"><span class="health-dot dot-green"></span><span><b>Assistant server</b><small>Loopback only · 127.0.0.1</small></span><strong id="health-server">ONLINE</strong></div>
+              <div class="node-health-row"><span class="health-dot dot-green"></span><span><b>Assistant server</b><small id="health-server-detail">Loopback only · 127.0.0.1</small></span><strong id="health-server">ONLINE</strong></div>
               <div class="node-health-row"><span class="health-dot dot-cyan"></span><span><b>Conversation mode</b><small id="health-ai-detail">Built-in local commands</small></span><strong id="health-ai">LOCAL</strong></div>
               <div class="node-health-row"><span class="health-dot dot-amber"></span><span><b>Voice input</b><small id="health-voice-detail">Checking browser support</small></span><strong id="health-voice">CHECKING</strong></div>
-              <div class="node-health-row"><span class="health-dot dot-mint"></span><span><b>Memory vault</b><small>JSON file stored in this project</small></span><strong>LOCAL</strong></div>
+              <div class="node-health-row"><span class="health-dot dot-mint"></span><span><b>Memory vault</b><small id="health-memory-detail">JSON file stored in this project</small></span><strong id="health-memory">LOCAL</strong></div>
+              <div class="node-health-row"><span class="health-dot dot-cyan"></span><span><b>Runtime / uptime</b><small id="node-runtime">Python runtime · collecting diagnostics</small></span><strong id="node-uptime">--:--</strong></div>
               <button class="settings-link" id="system-settings" type="button">Configure optional AI chat <span>↗</span></button>
             </section>
           </div>
