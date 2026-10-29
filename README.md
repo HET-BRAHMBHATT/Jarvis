@@ -2,9 +2,9 @@
 
 A small, local-first voice assistant inspired by the attached Mini JARVIS guide. It is designed to be useful immediately, even before connecting a paid or cloud AI service.
 
-**Current release: 2.0.0**
+**Current release: 2.1.0**
 
-Version 2 adds persistent Local/OpenAI mode selection, voice-friendly lakh/crore calculations, spoken-number follow-ups, safe clarification for incomplete math, and chat-turn deletion. The running version is shown in the app footer and returned by `/api/health`.
+Version 2.1 upgrades the local node with live Python runtime, endpoint, storage, and uptime diagnostics, plus a one-click health refresh. The running version is shown in the node panel and app footer and returned by `/api/health`. It includes persistent Local/OpenAI mode selection, voice-friendly lakh/crore calculations, spoken-number follow-ups, safe clarification for incomplete math, and chat-turn deletion.
 
 ## Start it
 
@@ -16,6 +16,7 @@ The app uses Python's standard library and browser features. It does not need a 
 
 ## What works locally
 
+- Local node diagnostics show the Python runtime, loopback endpoint, memory storage mode, and live process uptime.
 - Chat-style commands for the local time and date.
 - A restricted arithmetic calculator that understands standard symbols, spoken operators, speech variants of lakh, and Indian number scales such as lakh and crore; ask “read this number” to see the latest result in words. It does not evaluate arbitrary Python.
 - Personal notes that are saved in `data/notes.json` in this project folder.
