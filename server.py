@@ -116,10 +116,11 @@ NUMBER_WORDS = {
 }
 NUMBER_SCALES = {
     "hundred": 100, "thousand": 1_000, "lakh": 100_000, "lac": 100_000,
+    "lekh": 100_000, "lack": 100_000, "lak": 100_000,
     "crore": 10_000_000, "cr": 10_000_000, "million": 1_000_000, "billion": 1_000_000_000,
 }
 _NUMBER_TOKEN = "|".join(sorted(
-    [*NUMBER_WORDS, *NUMBER_SCALES, "hundreds", "thousands", "lakhs", "lacs", "crores", "millions", "billions"],
+    [*NUMBER_WORDS, *NUMBER_SCALES, "hundreds", "thousands", "lakhs", "lacs", "lekhs", "lacks", "laks", "crores", "millions", "billions"],
     key=len,
     reverse=True,
 ))
@@ -151,8 +152,8 @@ def spoken_number_value(phrase: str) -> int:
 
 def normalize_calculation(expression: str) -> str:
     text = expression.strip().replace(",", "")
-    text = re.sub(r"\b(?:multiplied\s+by|times|into)\b", " * ", text, flags=re.IGNORECASE)
-    text = re.sub(r"\b(?:divided\s+by|divide\s+by)\b", " / ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(?:multiply|multiplying|multiplies|multiplied)(?:\s+by)?\b|\b(?:times|into)\b", " * ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(?:divided|divide|dividing)(?:\s+by)?\b", " / ", text, flags=re.IGNORECASE)
     text = re.sub(r"\bplus\b", " + ", text, flags=re.IGNORECASE)
     text = re.sub(r"\bminus\b", " - ", text, flags=re.IGNORECASE)
     text = re.sub(r"\b(?:to\s+the\s+power\s+of|power\s+of)\b", " ** ", text, flags=re.IGNORECASE)
@@ -161,6 +162,8 @@ def normalize_calculation(expression: str) -> str:
     scales = {
         "thousand": 1_000, "thousands": 1_000, "lakh": 100_000, "lakhs": 100_000,
         "lac": 100_000, "lacs": 100_000, "crore": 10_000_000, "crores": 10_000_000,
+        "lekh": 100_000, "lekhs": 100_000, "lack": 100_000, "lacks": 100_000,
+        "lak": 100_000, "laks": 100_000,
         "cr": 10_000_000, "million": 1_000_000, "millions": 1_000_000,
         "billion": 1_000_000_000, "billions": 1_000_000_000,
     }
@@ -201,10 +204,54 @@ def format_calculation_result(value: int | float) -> str:
     return sign + whole + (separator + fraction if fraction else "")
 
 
+def number_to_words(value: int | float) -> str:
+    units = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+    tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+
+    def below_thousand(number: int) -> str:
+        parts: list[str] = []
+        if number >= 100:
+            parts.extend((units[number // 100], "hundred"))
+            number %= 100
+        if number >= 20:
+            parts.append(tens[number // 10])
+            if number % 10:
+                parts.append(units[number % 10])
+        elif number >= 10:
+            parts.append(teens[number - 10])
+        elif number:
+            parts.append(units[number])
+        return " ".join(parts) if parts else "zero"
+
+    def integer_words(number: int) -> str:
+        if number < 1_000:
+            return below_thousand(number)
+        for scale, label in ((100_000_000_000, "kharab"), (1_000_000_000, "arab"),
+                             (10_000_000, "crore"), (100_000, "lakh"), (1_000, "thousand")):
+            if number >= scale:
+                quotient, remainder = divmod(number, scale)
+                phrase = integer_words(quotient) + " " + label
+                return phrase + (" " + integer_words(remainder) if remainder else "")
+        return below_thousand(number)
+
+    rendered = format_calculation_result(value).replace(",", "")
+    negative = rendered.startswith("-")
+    if negative:
+        rendered = rendered[1:]
+    whole, separator, fraction = rendered.partition(".")
+    phrase = integer_words(int(whole or "0"))
+    if separator and fraction:
+        phrase += " point " + " ".join(units[int(digit)] for digit in fraction)
+    return ("minus " if negative else "") + phrase
+
+
 def calculate(expression: str) -> str:
     expression = normalize_calculation(expression).replace("^", "**")
     if not expression or len(expression) > 100:
         raise ValueError("Give me a short arithmetic expression, such as 12 * (8 + 3).")
+    if re.match(r"^[*/]", expression) or re.search(r"[+\-*/]$", expression):
+        raise ValueError("That calculation is missing a number. For example, say “calculate 1 lakh into 2,000.”")
     tree = ast.parse(expression, mode="eval")
     allowed_binary = (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow)
     allowed_unary = (ast.UAdd, ast.USub)
@@ -347,7 +394,15 @@ def local_command(message: str) -> dict[str, object] | None:
 
     if (
         (re.fullmatch(r"[\d\s.+\-*/()%^]+", clean) and re.search(r"\d", clean))
-        or (NUMBER_WORD_PATTERN.search(clean) and re.search(r"\b(?:plus|minus|times|into|multiplied by|divided by)\b", clean, re.IGNORECASE))
+        or (
+            NUMBER_WORD_PATTERN.search(clean)
+            and re.search(
+                r"\b(?:plus|minus|times|into|multiply|multiplying|multiplies|multiplied|divided|divide|dividing)\b|"
+                r"(?<!\w)[+*/×÷-](?!\w)|\bx\b",
+                clean,
+                re.IGNORECASE,
+            )
+        )
     ):
         try:
             answer = calculate(clean)
@@ -382,6 +437,39 @@ def local_command(message: str) -> dict[str, object] | None:
         return {"reply": "J.A.R.V.I.S. is online. " + mode + ". Notes are stored on this device.", "action": None, "source": "local"}
 
     return None
+
+
+def read_calculation_follow_up(message: str, history: object) -> dict[str, object] | None:
+    lower = message.casefold()
+    asks_to_read = re.search(r"\b(?:read|say|speak|spell(?:\s+out)?)\b", lower)
+    refers_to_result = re.search(r"\b(?:this|that|it|number|result|answer)\b", lower)
+    if not asks_to_read or not refers_to_result:
+        return None
+
+    if isinstance(history, list):
+        for item in reversed(history[-20:]):
+            if not isinstance(item, dict) or item.get("role") != "assistant":
+                continue
+            content = item.get("content")
+            if not isinstance(content, str):
+                continue
+            match = re.search(r"\bThat comes to\s+(-?\d[\d,]*(?:\.\d+)?)\b", content, re.IGNORECASE)
+            if not match:
+                continue
+            raw_number = match.group(1)
+            clean_number = raw_number.replace(",", "")
+            value: int | float = float(clean_number) if "." in clean_number else int(clean_number)
+            return {
+                "reply": raw_number + " is " + number_to_words(value) + ".",
+                "action": None,
+                "source": "local",
+            }
+
+    return {
+        "reply": "I don’t see a recent calculator result in this chat. Ask me to calculate it, then say “read that number.”",
+        "action": None,
+        "source": "local",
+    }
 
 
 def openai_reply(message: str, history: object) -> str:
@@ -612,6 +700,8 @@ class JarvisHandler(BaseHTTPRequestHandler):
                 return
             message = message.strip()[:1800]
             result = local_command(message)
+            if result is None:
+                result = read_calculation_follow_up(message, body.get("history"))
             if result is not None:
                 self.send_json(result)
                 return
