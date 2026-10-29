@@ -2,6 +2,10 @@
 
 A small, local-first voice assistant inspired by the attached Mini JARVIS guide. It is designed to be useful immediately, even before connecting a paid or cloud AI service.
 
+**Current release: 2.0.0**
+
+Version 2 adds persistent Local/OpenAI mode selection, voice-friendly lakh/crore calculations, spoken-number follow-ups, safe clarification for incomplete math, and chat-turn deletion. The running version is shown in the app footer and returned by `/api/health`.
+
 ## Start it
 
 1. Install Python 3.10 or newer on Windows.
