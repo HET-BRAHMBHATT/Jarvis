@@ -26,6 +26,8 @@
   let currentMode = storageGet(MODE_KEY) === "openai" ? "openai" : "local";
   let openaiAvailable = false;
   let currentModel = "";
+  let nodeUptimeSeconds = 0;
+  let nodeUptimeObservedAt = 0;
   let notesMode = "server";
   let busy = false;
   let recognition = null;
@@ -52,6 +54,22 @@
 
   function displayTime(date = new Date()) {
     return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  function formatNodeUptime(totalSeconds) {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainder = seconds % 60;
+    const clock = [hours, minutes, remainder].map(value => String(value).padStart(2, "0")).join(":");
+    return days ? days + "d " + clock : clock;
+  }
+
+  function updateNodeUptime() {
+    if (!nodeUptimeObservedAt) return;
+    const elapsed = Math.floor((Date.now() - nodeUptimeObservedAt) / 1000);
+    $("#node-uptime").textContent = formatNodeUptime(nodeUptimeSeconds + elapsed);
   }
 
   function renderMessage(role, text, options = {}) {
@@ -180,6 +198,20 @@
     try {
       const status = await requestJson("/api/health");
       if (status.version) $("#app-version").textContent = status.version;
+      if (status.version) $("#node-version").textContent = "v" + status.version;
+      const node = status.node && typeof status.node === "object" ? status.node : {};
+      const hosted = node.transport === "hosted";
+      const port = Number(node.port);
+      const portSuffix = Number.isInteger(port) && port > 0 ? ":" + port : "";
+      $("#node-summary").textContent = hosted ? "Hosted node · diagnostics live" : "On-device node · diagnostics live";
+      $("#health-server-detail").textContent = hosted ? "Hosted endpoint" : "Loopback only · 127.0.0.1" + portSuffix;
+      const browserStorage = node.storage === "browser" || status.notesMode === "browser";
+      $("#health-memory-detail").textContent = browserStorage ? "Notes stay in this browser" : "Notes saved in data/notes.json";
+      $("#health-memory").textContent = browserStorage ? "BROWSER" : "LOCAL";
+      $("#node-runtime").textContent = (node.runtime || "Python runtime") + " · " + (browserStorage ? "browser vault" : "local file vault");
+      nodeUptimeSeconds = Number.isFinite(Number(node.uptimeSeconds)) ? Number(node.uptimeSeconds) : 0;
+      nodeUptimeObservedAt = Date.now();
+      updateNodeUptime();
       notesMode = status.notesMode === "browser" ? "browser" : "server";
       openaiAvailable = status.aiAvailable === true || status.mode === "openai";
       currentModel = status.model || "";
@@ -197,6 +229,8 @@
       $("#header-status").textContent = "OFFLINE";
       $("#rail-core-state").textContent = "Unavailable";
       $("#health-server").textContent = "OFFLINE";
+      $("#node-summary").textContent = "Local node is unreachable";
+      $("#health-server-detail").textContent = "Start or restart J.A.R.V.I.S. to reconnect";
       showToast("Can’t reach the local assistant. Keep the server window open and refresh.", true);
     }
   }
@@ -712,6 +746,7 @@
   function initialize() {
     updateClock();
     window.setInterval(updateClock, 1000);
+    window.setInterval(updateNodeUptime, 1000);
     seedChat();
     updateSpeechButton();
     setupRecognition();
@@ -792,6 +827,18 @@
     });
     $("#stop-timer").addEventListener("click", () => stopTimer(true));
     const dialog = $("#settings-dialog");
+    $("#refresh-node").addEventListener("click", async event => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.classList.add("is-loading");
+      try {
+        await refreshStatus();
+        if ($("#health-server").textContent === "ONLINE") showToast("Local node diagnostics refreshed.");
+      } finally {
+        button.disabled = false;
+        button.classList.remove("is-loading");
+      }
+    });
     $("#mode-local").addEventListener("click", () => {
       currentMode = "local";
       try { localStorage.setItem(MODE_KEY, currentMode); } catch (_) {}
