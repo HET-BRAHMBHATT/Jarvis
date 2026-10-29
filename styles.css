@@ -22,4 +22,10 @@
 .stop-speech:disabled{opacity:.3;cursor:default}
 
 .typing-row[hidden]{display:none}
+.mode-switch{display:flex;align-items:center;gap:2px;padding:2px;border:1px solid #aec2cd20;border-radius:7px;background:#0d151a}
+.mode-option{min-height:23px;padding:0 7px;border:1px solid transparent;border-radius:5px;background:transparent;color:#77878d;font:7px var(--mono);letter-spacing:.045em;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease}
+.mode-option[aria-pressed="true"]{border-color:#89d6df2b;background:#89d6df16;color:#c4e9e5}
+.mode-option:disabled{opacity:.48;cursor:not-allowed}
+.mode-option:not(:disabled):hover{color:#d5e5e3}
+@media(max-width:680px){.chat-heading-actions{gap:4px}.mode-option{padding:0 5px;font-size:6px}}
 
