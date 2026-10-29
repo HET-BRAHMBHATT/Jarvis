@@ -27,6 +27,7 @@ Say “delete this message” to remove the previous user message and J.A.R.V.I.
 ## Optional OpenAI chat
 
 Open-ended AI answers require a configured language model and an API account with available credits and model access. This project supports the OpenAI Responses API. A key can be saved in .env, but creating a key does not add API credits; ChatGPT subscriptions and API billing are separate. Local commands continue to work if cloud usage is unavailable.
+You can also say “yes switch” after J.A.R.V.I.S. offers OpenAI mode, or say “switch to local” to change modes by voice or text.
 
 1. Copy `.env.example` to a file named `.env` in this folder.
 2. Put your key after `OPENAI_API_KEY=`.
