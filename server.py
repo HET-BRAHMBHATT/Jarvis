@@ -180,7 +180,7 @@ def normalize_calculation(expression: str) -> str:
         text,
     )
     text = re.sub(r"(?<=[)\d])\s+and\s+(?=[(\d])", " + ", text, flags=re.IGNORECASE)
-    text = re.sub(r"(?<=\d)\s*[xX]\s*(?=[\d(])", " * ", text)
+    text = re.sub(r"(?<=[)\d])\s*[xX]\s*(?=[\d(])", " * ", text)
     return text.strip().rstrip("?").strip()
 
 
@@ -250,6 +250,8 @@ def calculate(expression: str) -> str:
     expression = normalize_calculation(expression).replace("^", "**")
     if not expression or len(expression) > 100:
         raise ValueError("Give me a short arithmetic expression, such as 12 * (8 + 3).")
+    if re.search(r"\)\s*\(", expression):
+        raise ValueError("I heard two values without an operation between them. Add + or ×, for example “20 lakh plus 9 lakh.”")
     if re.match(r"^[*/]", expression) or re.search(r"[+\-*/]$", expression):
         raise ValueError("That calculation is missing a number. For example, say “calculate 1 lakh into 2,000.”")
     tree = ast.parse(expression, mode="eval")
@@ -329,6 +331,31 @@ def local_command(message: str) -> dict[str, object] | None:
 
     if re.search(r"\b(?:i love you|love you|i like you|you(?:'re| are) (?:great|awesome|the best))\b", lower):
         return {"reply": "That’s kind of you. I’m glad I can help. What shall we work on next?", "action": None, "source": "local"}
+
+    mode_match = re.fullmatch(
+        r"(?:yes[, ]+)?(?:switch|change)(?:\s+(?:(?:conversation\s+)?mode))?"
+        r"(?:\s+(?:to\s+)?(openai|ai|cloud|local|on-device))?(?:\s+mode)?[.! ]*",
+        lower,
+    )
+    if mode_match:
+        target_mode = "local" if mode_match.group(1) in {"local", "on-device"} else "openai"
+        if target_mode == "local":
+            return {
+                "reply": "Switched to Local mode. Built-in commands and notes stay on this device.",
+                "action": {"type": "set_mode", "mode": "local"},
+                "source": "local",
+            }
+        if not os.environ.get("OPENAI_API_KEY", "").strip():
+            return {
+                "reply": "OpenAI mode needs an API key. Add it to this project’s .env file and restart J.A.R.V.I.S.",
+                "action": None,
+                "source": "local",
+            }
+        return {
+            "reply": "Switched to OpenAI mode. Open-ended prompts will use your configured API key; built-in commands still run locally.",
+            "action": {"type": "set_mode", "mode": "openai"},
+            "source": "local",
+        }
 
     if re.search(r"\b(?:invalid syntax|calculator error|calculation error)\b", lower):
         return {
