@@ -22,6 +22,7 @@ The app uses Python's standard library and browser features. It does not need a 
 - Voice input in supported browsers. Tap the mic once to start a hands-free session; it stays ready for the next question after each answer. Tap the mic again to stop immediately. Browser speech recognition may process audio through your browser provider. If the browser asks again, set the local page microphone permission to Allow; private or temporary browser sessions may discard site permissions.
 
 The chat transcript and voice-reply preference are saved in this browser’s local storage. In local mode, messages and notes are not sent to an AI service.
+Say “delete this message” to remove the previous user message and J.A.R.V.I.S. reply from the current chat in this browser.
 
 ## Optional OpenAI chat
 
