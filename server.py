@@ -533,9 +533,11 @@ class JarvisHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         path = urlparse(self.path).path
         if path == "/api/health":
+            ai_available = bool(os.environ.get("OPENAI_API_KEY", "").strip())
             self.send_json({
                 "status": "online",
-                "mode": "openai" if os.environ.get("OPENAI_API_KEY", "").strip() else "local",
+                "mode": "openai" if ai_available else "local",
+                "aiAvailable": ai_available,
                 "model": os.environ.get("JARVIS_MODEL", "gpt-5.4-mini"),
                 "notes": 0 if browser_notes_enabled() else len(read_notes()),
                 "notesMode": "browser" if browser_notes_enabled() else "server",
@@ -603,14 +605,32 @@ class JarvisHandler(BaseHTTPRequestHandler):
             if not isinstance(message, str) or not message.strip():
                 self.send_json({"error": "Write a message first."}, 400)
                 return
+            configured = bool(os.environ.get("OPENAI_API_KEY", "").strip())
+            requested_mode = body.get("mode", "openai" if configured else "local")
+            if not isinstance(requested_mode, str) or requested_mode not in {"local", "openai"}:
+                self.send_json({"error": "Choose Local or OpenAI conversation mode."}, 400)
+                return
             message = message.strip()[:1800]
             result = local_command(message)
             if result is not None:
                 self.send_json(result)
                 return
+            if requested_mode == "local":
+                self.send_json({
+                    "reply": (
+                        "I’m in Local mode. I can handle time and date, arithmetic, notes, timers, and trusted site links. "
+                        "Switch to OpenAI mode for open-ended answers."
+                    ),
+                    "action": None,
+                    "source": "local",
+                })
+                return
+            if not configured:
+                self.send_json({"error": "OpenAI mode is unavailable until an API key is configured in the project’s .env file and the server is restarted."}, 409)
+                return
             try:
                 reply = openai_reply(message, body.get("history"))
-                self.send_json({"reply": reply, "action": None, "source": "openai" if os.environ.get("OPENAI_API_KEY", "").strip() else "local"})
+                self.send_json({"reply": reply, "action": None, "source": "openai"})
             except RuntimeError as exc:
                 self.send_json({"error": str(exc)}, 502)
             return
